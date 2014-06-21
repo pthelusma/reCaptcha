@@ -22,14 +22,6 @@ namespace Testing.Controllers
         public ActionResult Submit(string remoteip, string privatekey, string challenge, string response)
         {
 
-             var something = verifyRecaptcha(remoteip, privatekey, challenge, response);
-
-            return Json(new {Result = "Success"});
-        }
-
-        private async Task<string> verifyRecaptcha(string remoteip, string privatekey, string challenge, string response)
-        {
-
             HttpClient client = new HttpClient();
 
             var values = new List<KeyValuePair<string, string>>();
@@ -39,11 +31,25 @@ namespace Testing.Controllers
             values.Add(new KeyValuePair<string, string>("response", HttpUtility.UrlEncode(response)));
 
             var content = new FormUrlEncodedContent(values);
-            var resp = await client.PostAsync("http://www.google.com/recaptcha/api/verify", content).ConfigureAwait(false);
-            var responseString = await resp.Content.
+            var postResponse = client.PostAsync("http://www.google.com/recaptcha/api/verify", content).Result;
 
-            return responseString;
-  
+            string resultContent = postResponse.Content.ReadAsStringAsync().Result;
+
+            string[] responseResults = resultContent.Split(new string[] { "\n", "\\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            Response resp = new Response()
+            {
+                result = responseResults[0],
+                code = responseResults[1]
+            };
+
+            return Json(resp);
+        }
+
+        public class Response
+        {
+            public string result { get; set; }
+            public string code { get; set; }
         }
 
     }
