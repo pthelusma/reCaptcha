@@ -1,0 +1,57 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+<div id="recaptcha_div"></div>
+<input type="button" id="btnSubmit" value="Submit"/>
+
+<script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+<script type="text/javascript" src="~/Scripts/jquery-1.8.2.min.js"></script>
+<script type="text/javascript">
+    
+    $(function () {
+        var remoteip;
+
+        Recaptcha.create("6LcXkfUSAAAAACBhoS9s68a6Ivu_kCfoo8RU1-hg", "recaptcha_div", {
+            theme: "red",
+            callback: Recaptcha.focus_response_field
+        });
+
+        $.getJSON("http://jsonip.appspot.com?callback=?",
+            function (data) {
+                remoteip = data.ip;
+        });
+
+        $("#btnSubmit").click(function() {
+            var challenge = Recaptcha.get_challenge();
+            var response = Recaptcha.get_response();
+
+            //verify respoonse is not blank
+           
+            $.ajax({
+                type: "POST",
+                url: "/Home/Submit",
+                async: false,
+                data: {
+                    remoteip: remoteip,
+                    privatekey: "6LcXkfUSAAAAAGQO8dXYce09FzVPyMRoCK2ONzHo",
+                    challenge: challenge,
+                    response: response
+                },
+                success: function (resp) {
+
+                    Recaptcha.destroy();
+                    Recaptcha.create("6LcXkfUSAAAAACBhoS9s68a6Ivu_kCfoo8RU1-hg", "recaptcha_div", {
+                        theme: "red",
+                        callback: Recaptcha.focus_response_field
+                    });
+                }
+            });
+        });
+
+    });
+
+
+</script>
